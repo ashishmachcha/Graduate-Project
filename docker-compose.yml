@@ -1,0 +1,4 @@
+services:
+  app:
+    image: python:3.13.4-slim-bullseye
+    
