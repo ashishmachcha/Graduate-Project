@@ -1,0 +1,16 @@
+<h1>Todo List</h1>
+
+<ul>
+    {% for item in todo_items %}
+        <li>{{ item.title }}
+            {% if item.completed %}
+                <span style="color: green;">Completed</span>
+            {% else %}
+                <span style="color: red;">Not completed</span>
+            {% endif %}
+            <a href="{% url 'delete_todo_item' item.pk %}">Delete</a>
+        </li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'add_todo_item' %}">Add Todo Item</a>
