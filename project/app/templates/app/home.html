@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home – Prompt Driven Development</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0c0f17;
+            --bg-card: rgba(18, 22, 35, 0.85);
+            --bg-elevated: rgba(24, 28, 42, 0.9);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f2f5;
+            --text-muted: #8b92a7;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.35);
+            --success: #34d399;
+            --error: #f87171;
+            --input-bg: rgba(15, 18, 28, 0.9);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 140% 70% at 50% -30%, rgba(99, 102, 241, 0.18), transparent 55%),
+                radial-gradient(ellipse 70% 50% at 95% 50%, rgba(139, 92, 246, 0.1), transparent 45%),
+                radial-gradient(ellipse 60% 40% at 5% 70%, rgba(59, 130, 246, 0.08), transparent 40%);
+        }
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 64px 64px;
+        }
+        .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem 1rem 2rem;
+            border-bottom: 1px solid var(--border-glass);
+            background: rgba(12, 15, 23, 0.6);
+            backdrop-filter: blur(12px);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: inherit;
+        }
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .brand span { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; }
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .nav a:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+        .nav .user { color: var(--text-muted); font-size: 0.9rem; }
+        main { flex: 1; padding: 2rem 2rem 3rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+        .hero {
+            text-align: center;
+            padding: 3rem 1.5rem 2.5rem;
+        }
+        .hero h1 {
+            font-size: clamp(1.75rem, 4vw, 2.25rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.6rem;
+            background: linear-gradient(135deg, #fff 0%, #c7d2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            margin-bottom: 2rem;
+        }
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.75rem;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+        .cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px var(--accent-glow);
+        }
+        .cta .plus { font-size: 1.25rem; line-height: 1; }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        .project-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 1.35rem;
+            transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        .project-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+        .project-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .project-card .slug {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: ui-monospace, monospace;
+            margin-bottom: 1rem;
+        }
+        .project-actions {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .project-actions a,
+        .project-actions button {
+            padding: 0.5rem 0.9rem;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            color: #fff;
+        }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .btn-ghost {
+            background: rgba(255,255,255,0.06);
+            color: var(--text-muted);
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px dashed var(--border-glass);
+            border-radius: 16px;
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+        .empty-state p { color: var(--text-muted); margin-bottom: 1rem; }
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .modal h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .modal .sub { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+        .modal label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+        .modal input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        .modal input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .modal-actions .submit {
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            color: #fff;
+            border: none;
+        }
+        .modal-actions .submit:hover { transform: translateY(-1px); }
+        .modal-actions .cancel {
+            background: rgba(255,255,255,0.06);
+            color: var(--text-muted);
+            border: 1px solid var(--border-glass);
+        }
+        .modal-actions .cancel:hover { color: var(--text-primary); }
+        .modal .msg {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            display: none;
+        }
+        .modal .msg.error { background: rgba(248,113,113,0.15); color: var(--error); display: block; }
+        .modal .msg.success { background: rgba(52,211,153,0.15); color: var(--success); display: block; }
+
+        /* Welcome & features */
+        .welcome {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        .welcome strong { color: var(--text-primary); font-weight: 600; }
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 2rem;
+            margin-bottom: 2.5rem;
+        }
+        .feature-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 100px;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            transition: transform 0.15s, box-shadow 0.2s;
+            text-decoration: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .feature-pill:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+        a.feature-pill:hover { color: var(--text-primary); }
+        .feature-pill .ico { font-size: 1.1rem; opacity: 0.9; }
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .section-header .section-title { margin-bottom: 0; }
+        .project-count {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .project-count span { color: var(--accent); font-weight: 600; }
+        .project-card .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-glass), transparent);
+            margin: 2rem 0;
+        }
+        footer.home-footer {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            border-top: 1px solid var(--border-glass);
+            margin-top: auto;
+        }
+        footer.home-footer p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        footer.home-footer a { color: var(--accent); text-decoration: none; }
+        footer.home-footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+    <div class="grid-overlay"></div>
+    <div class="app">
+        <header>
+            <a href="{% url 'home' %}" class="brand">
+                <div class="brand-icon">◇</div>
+                <span>Prompt Driven Development</span>
+            </a>
+            <nav class="nav">
+                <span class="user">{{ user.username }}</span>
+                <a href="{% url 'ide' %}">IDE</a>
+                <a href="{% url 'logout' %}">Sign out</a>
+            </nav>
+        </header>
+        <main>
+            <section class="hero">
+                <p class="welcome">Welcome back, <strong>{{ user.username }}</strong></p>
+                <h1>Build with AI</h1>
+                <p>Create a new project and start coding with your AI assistant in the IDE.</p>
+                <button type="button" class="cta" id="createProjectBtn"><span class="plus">+</span> Create a project</button>
+                <div class="features">
+                    <a href="{% url 'ide' %}" class="feature-pill"><span class="ico">◇</span> AI-powered coding</a>
+                    <a href="{% url 'ide' %}" class="feature-pill"><span class="ico">📁</span> File tree & editor</a>
+                    <a href="{% url 'ide' %}" class="feature-pill"><span class="ico">▶</span> Run & build</a>
+                    <button type="button" class="feature-pill" id="createProjectPill"><span class="ico">⚡</span> One-click projects</button>
+                </div>
+            </section>
+            <div class="divider"></div>
+            <div class="section-header">
+                <h2 class="section-title">Your projects</h2>
+                {% if workspaces %}
+                    <span class="project-count"><span>{{ workspaces|length }}</span> project{{ workspaces|length|pluralize }}</span>
+                {% endif %}
+            </div>
+            {% if workspaces %}
+                <div class="projects-grid" id="projectsGrid">
+                    {% for w in workspaces %}
+                        <div class="project-card" data-slug="{{ w.slug }}">
+                            <div class="card-icon">📁</div>
+                            <h3>{{ w.name }}</h3>
+                            <div class="slug">{{ w.slug }}</div>
+                            <div class="project-actions">
+                                <a href="{% url 'ide' %}?workspace={{ w.slug }}" class="btn-primary">Open in IDE</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state" id="emptyState">
+                    <div class="icon">📁</div>
+                    <p>No projects yet. Create your first project to get started.</p>
+                    <p style="font-size: 0.9rem; margin-bottom: 1.25rem;">Open the IDE, describe what you want to build, and the AI will generate and run code for you.</p>
+                    <button type="button" class="cta" id="createProjectBtnEmpty"><span class="plus">+</span> Create a project</button>
+                </div>
+                <div class="projects-grid" id="projectsGrid" style="display: none;"></div>
+            {% endif %}
+        </main>
+        <footer class="home-footer">
+            <p>Prompt Driven Development — build faster with AI.</p>
+        </footer>
+    </div>
+
+    <div class="modal-backdrop" id="createModal">
+        <div class="modal">
+            <h2>New project</h2>
+            <p class="sub">Choose a name and a unique project ID (used in the workspace path).</p>
+            <div class="msg" id="createMsg"></div>
+            <form id="createForm">
+                <label for="projectName">Project name</label>
+                <input type="text" id="projectName" name="name" required placeholder="My awesome app">
+                <label for="projectSlug">Project ID (slug)</label>
+                <input type="text" id="projectSlug" name="slug" required placeholder="my-awesome-app">
+                <div class="modal-actions">
+                    <button type="button" class="cancel" id="cancelCreate">Cancel</button>
+                    <button type="submit" class="submit">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var modal = document.getElementById('createModal');
+            var form = document.getElementById('createForm');
+            var msg = document.getElementById('createMsg');
+            var nameInput = document.getElementById('projectName');
+            var slugInput = document.getElementById('projectSlug');
+
+            function openModal() {
+                modal.classList.add('open');
+                msg.textContent = '';
+                msg.className = 'msg';
+                form.reset();
+                nameInput.focus();
+            }
+            function closeModal() {
+                modal.classList.remove('open');
+            }
+            function showMsg(text, isError) {
+                msg.textContent = text;
+                msg.className = 'msg ' + (isError ? 'error' : 'success');
+                msg.style.display = 'block';
+            }
+
+            document.getElementById('createProjectBtn').addEventListener('click', openModal);
+            if (document.getElementById('createProjectBtnEmpty')) {
+                document.getElementById('createProjectBtnEmpty').addEventListener('click', openModal);
+            }
+            if (document.getElementById('createProjectPill')) {
+                document.getElementById('createProjectPill').addEventListener('click', openModal);
+            }
+            document.getElementById('cancelCreate').addEventListener('click', closeModal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeModal();
+            });
+
+            nameInput.addEventListener('input', function() {
+                if (!slugInput.value || slugInput.dataset.auto) {
+                    var s = nameInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                    slugInput.value = s;
+                    slugInput.dataset.auto = '1';
+                }
+            });
+            slugInput.addEventListener('input', function() { delete slugInput.dataset.auto; });
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var name = nameInput.value.trim();
+                var slug = slugInput.value.trim();
+                if (!name || !slug) {
+                    showMsg('Name and project ID are required.', true);
+                    return;
+                }
+                var btn = form.querySelector('.submit');
+                btn.disabled = true;
+                msg.textContent = '';
+                msg.className = 'msg';
+
+                var csrfToken = '{{ csrf_token }}';
+                fetch('/api/workspaces/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ name: name, slug: slug })
+                }).then(function(r) {
+                    return r.json().then(function(data) {
+                        if (r.ok) {
+                            showMsg('Project created. Redirecting…', false);
+                            window.location.href = '{% url "ide" %}?workspace=' + encodeURIComponent(data.slug);
+                            return;
+                        }
+                        showMsg(data.error || 'Failed to create project.', true);
+                    });
+                }).catch(function() {
+                    showMsg('Network error. Try again.', true);
+                }).then(function() {
+                    btn.disabled = false;
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

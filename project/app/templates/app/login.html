@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in – Prompt Driven Development</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0c0f17;
+            --bg-card: rgba(18, 22, 35, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f2f5;
+            --text-muted: #8b92a7;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.35);
+            --error: #f87171;
+            --input-bg: rgba(15, 18, 28, 0.9);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            overflow-x: hidden;
+        }
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 120% 80% at 50% -20%, rgba(99, 102, 241, 0.2), transparent 50%),
+                radial-gradient(ellipse 80% 50% at 90% 60%, rgba(139, 92, 246, 0.12), transparent 45%),
+                radial-gradient(ellipse 60% 40% at 10% 80%, rgba(59, 130, 246, 0.1), transparent 40%);
+        }
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 64px 64px;
+        }
+        .wrap {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+        }
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        .logo h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .sub {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+        .error {
+            background: rgba(248, 113, 113, 0.12);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            color: var(--error);
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+        }
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+        input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input::placeholder { color: var(--text-muted); opacity: 0.7; }
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .field { margin-bottom: 1.25rem; }
+        .btn {
+            width: 100%;
+            padding: 0.95rem 1.25rem;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            margin-top: 0.5rem;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px var(--accent-glow);
+        }
+        .btn:active { transform: translateY(0); }
+        .footer {
+            text-align: center;
+            margin-top: 1.75rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+    <div class="grid-overlay"></div>
+    <div class="wrap">
+        <div class="card">
+            <div class="logo">
+                <div class="logo-icon">◇</div>
+                <h1>Prompt Driven Development</h1>
+            </div>
+            <p class="sub">Sign in to continue to your workspace.</p>
+            {% if form.non_field_errors %}
+                <div class="error">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <div class="field">
+                    <label for="id_username">Username</label>
+                    <input type="text" name="username" id="id_username" required autofocus placeholder="Enter your username">
+                </div>
+                <div class="field">
+                    <label for="id_password">Password</label>
+                    <input type="password" name="password" id="id_password" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn">Sign in</button>
+            </form>
+            <p class="footer">Don't have an account? <a href="{% url 'signup' %}">Create one</a></p>
+        </div>
+    </div>
+</body>
+</html>

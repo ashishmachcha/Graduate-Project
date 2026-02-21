@@ -1,4 +1,17 @@
 services:
   app:
-    image: python:3.13.4-slim-bullseye
-    
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ALLOWED_HOSTS=*
+      - PDD_USE_DOCKER_FOR_RUNTIMES=True
+    volumes:
+      # So the app can run "docker run" for Node/Java/Python etc. (sibling containers)
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Persist code, workspace, and db.sqlite3 on your machine
+      - ./project:/app/project
+    restart: unless-stopped

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat – Prompt Driven Development</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; margin: 0; padding: 1rem; max-width: 720px; margin-left: auto; margin-right: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        h1 { font-size: 1.25rem; margin: 0; }
+        a { color: #06c; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .workspace-row { margin-bottom: 1rem; }
+        .workspace-row label { display: block; margin-bottom: 0.25rem; font-weight: 500; }
+        .workspace-row select { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+        .messages { border: 1px solid #ddd; border-radius: 6px; min-height: 200px; max-height: 400px; overflow-y: auto; padding: 1rem; margin-bottom: 1rem; background: #fafafa; }
+        .msg { margin-bottom: 0.75rem; }
+        .msg.user { color: #055; }
+        .msg.assistant { color: #333; white-space: pre-wrap; }
+        .input-row { display: flex; gap: 0.5rem; }
+        .input-row textarea { flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; resize: vertical; min-height: 80px; }
+        .input-row button { padding: 0.6rem 1rem; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        .input-row button:hover { background: #555; }
+        .input-row button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .error { color: #c00; margin-top: 0.5rem; }
+        .create-workspace { margin-top: 0.5rem; font-size: 0.9rem; }
+        .create-workspace input { padding: 0.35rem; margin-right: 0.25rem; width: 120px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Prompt Driven Development</h1>
+        <a href="{% url 'logout' %}">Log out</a>
+    </header>
+
+    <div class="workspace-row">
+        <label for="workspace">Project (workspace)</label>
+        <select id="workspace">
+            {% for w in workspaces %}
+                <option value="{{ w.slug }}">{{ w.name }} ({{ w.slug }})</option>
+            {% empty %}
+                <option value="">— Create a project below —</option>
+            {% endfor %}
+        </select>
+        <div class="create-workspace">
+            <input type="text" id="new_name" placeholder="Project name">
+            <input type="text" id="new_slug" placeholder="slug">
+            <button type="button" id="btn_create">Create project</button>
+        </div>
+    </div>
+
+    <div class="messages" id="messages">
+        <div class="msg assistant">Select a project and type a prompt below. The PDD agent will generate or modify code in that workspace.</div>
+    </div>
+
+    <div class="input-row">
+        <textarea id="prompt" placeholder="e.g. Create a Python file hello.py that prints Hello, World!"></textarea>
+        <button type="button" id="btn_send">Send</button>
+    </div>
+    <div class="error" id="error"></div>
+
+    <script>
+        const csrfToken = "{{ csrf_token }}";
+        const workspaceSelect = document.getElementById("workspace");
+        const messagesEl = document.getElementById("messages");
+        const promptEl = document.getElementById("prompt");
+        const btnSend = document.getElementById("btn_send");
+        const btnCreate = document.getElementById("btn_create");
+        const errorEl = document.getElementById("error");
+        const newName = document.getElementById("new_name");
+        const newSlug = document.getElementById("new_slug");
+
+        function addMessage(role, content) {
+            const div = document.createElement("div");
+            div.className = "msg " + role;
+            div.textContent = content;
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function setError(msg) {
+            errorEl.textContent = msg || "";
+        }
+
+        btnSend.addEventListener("click", async function () {
+            const projectId = workspaceSelect.value;
+            const message = (promptEl.value || "").trim();
+            if (!projectId) {
+                setError("Select or create a project first.");
+                return;
+            }
+            if (!message) {
+                setError("Enter a prompt.");
+                return;
+            }
+            setError("");
+            addMessage("user", message);
+            promptEl.value = "";
+            btnSend.disabled = true;
+
+            try {
+                const r = await fetch("/api/chat/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({ project_id: projectId, message: message }),
+                });
+                const data = await r.json();
+                if (!r.ok) {
+                    setError(data.error || "Request failed");
+                    addMessage("assistant", "Error: " + (data.error || r.statusText));
+                } else {
+                    addMessage("assistant", data.content || "(no response)");
+                }
+            } catch (e) {
+                setError(e.message);
+                addMessage("assistant", "Error: " + e.message);
+            }
+            btnSend.disabled = false;
+        });
+
+        btnCreate.addEventListener("click", async function () {
+            const name = (newName.value || "").trim();
+            const slug = (newSlug.value || "").trim();
+            if (!name || !slug) {
+                setError("Enter name and slug.");
+                return;
+            }
+            setError("");
+            try {
+                const r = await fetch("/api/workspaces/create/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({ name: name, slug: slug }),
+                });
+                const data = await r.json();
+                if (!r.ok) {
+                    setError(data.error || "Create failed");
+                    return;
+                }
+                const opt = document.createElement("option");
+                opt.value = data.slug;
+                opt.textContent = data.name + " (" + data.slug + ")";
+                workspaceSelect.appendChild(opt);
+                workspaceSelect.value = data.slug;
+                newName.value = "";
+                newSlug.value = "";
+            } catch (e) {
+                setError(e.message);
+            }
+        });
+    </script>
+</body>
+</html>

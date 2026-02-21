@@ -1,0 +1,4 @@
+# PDD Python runtime: use when PDD_USE_DOCKER_FOR_RUNTIMES = True so you don't need Python/Django on the host.
+# Build once from project root: docker build -t pdd-python:3.12 -f docker/Dockerfile.python .
+FROM python:3.12-slim
+RUN pip install --no-cache-dir django pytest ruff black mypy

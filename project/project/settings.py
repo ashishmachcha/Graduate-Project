@@ -12,8 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR.parent / ".env")
+except ImportError:
+    pass  # python-dotenv not installed; use env vars or install: pip install python-dotenv
 
 
 # Quick-start development settings - unsuitable for production
@@ -25,7 +30,7 @@ SECRET_KEY = 'django-insecure-g5y2v&l(3cp9o^2i_xtir2s#5k(u(2_45q1yns+-8cblmbyzsc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
 
 # Application definition
@@ -37,7 +42,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'app',
 ]
+
+# Workspace base dir for PDD agent (same as AI/tools/tools.py)
+AI_WORKSPACE_DIR = BASE_DIR / 'workspace'
+
+# Run all language runtimes (Python, Node, Java, Go, etc.) inside Docker—you do NOT need to install
+# Python, Node.js, Java, or anything else on your computer. Only Docker is required (e.g. Docker Desktop).
+# Set to False to run commands on the host (then you must install runtimes locally).
+PDD_USE_DOCKER_FOR_RUNTIMES = True
+
+# Build the Python image once (so Django/pytest work in Docker):
+#   cd project && docker build -t pdd-python:3.12 -f docker/Dockerfile.python .
+# Other runtimes (Node, Java, Go, etc.) use official images and need no build.
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -54,7 +72,7 @@ ROOT_URLCONF = 'project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'app' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -122,3 +140,9 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# Auth
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/home/"
+LOGOUT_REDIRECT_URL = "/login/"

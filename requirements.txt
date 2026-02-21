@@ -1,3 +1,6 @@
 django
+requests
 langchain-groq
+langchain-openai
 langgraph
+python-dotenv
