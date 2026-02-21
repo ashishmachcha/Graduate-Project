@@ -48,3 +48,4 @@ from AI.agents import get_cursor_agent
 - **project/AI/** – LLM, agent, tools, prompts.
 - **docs/** – PDD fundamentals and examples.
 - **src/** – Jupyter notebooks and setup for local testing.
+_ **docker** - Docker
